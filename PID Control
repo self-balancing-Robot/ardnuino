@@ -5,15 +5,19 @@
 #define EN1 5
 #define EN2 6
 
-float kp =
-float kd =
-float ki =
+float kp;
+float kd;
+float ki;
 
 float current_angle;
-float desired_angle = 512;,
-float error
-float error_previous
+float desired_angle;
+float error;
+float error_previous;
 
+float P_Control;
+float D_control;
+float I_Control;
+float PID_Control;
 
 void setup()
 {
@@ -46,15 +50,15 @@ void loop()
  
 }
 
-{ PID Control
-
-P_Control = kp * error
-
-D_Control = kd * (error-error_previous)/Time
-
-I_control = ki * error * Time
-
-PID = P_Control + D_Control + I_Control
+ void PID_Control()
+ {
+  current_angle = analogRead(A0);
+  error = desired_angle - current_error;
+  
+  P_Control = kp * error;
+  D_Control = kd * (error-error_previous)/Time;
+  I_control = ki * error * Time;
+  PID_Control = P_Control + D_Control + I_Control;
 
 }
 
