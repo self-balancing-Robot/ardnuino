@@ -16,11 +16,11 @@ float error, previousError;
 unsigned long currentTime, previousTime;
 float elapsedTime;
 
-float setPoint;
-float 
+float setPoint, input, output;
+
 void setup()
 {
-   Serial.begin(9600);
+  Serial.begin(9600);
   pinMode(A0, INPUT);
  
   pinMode(EN1 , OUTPUT);
@@ -33,13 +33,15 @@ void setup()
   currentTime = millis();
   elapsedTime = currentTime - previousTime;
  
- 
+  setPoint = 0;
 }
 
 void loop()
 {
+  input = analogRead(A0);     //read from rotary encoder connected to A0
+  output = PID(input);
   sensor();
-   error = setPoint - input;
+  error = setPoint - input;
 }
 
 void sensor()
@@ -51,6 +53,18 @@ void sensor()
   analogWrite(EN2, 255);
 }
 
+float computePID(double inp)
+{
+  currentTime = millis();   //get current time
+  elapsedTime = (double)(currentTime - previousTime);   //compute time elapsed from previous computation
+  error = Setpoint - inp;   // determine error
+  cumError += error * elapsedTime;    // compute integral
+  rateError = (error - lastError)/elapsedTime;    // compute derivative
+  double out = kp*error + ki*cumError + kd*rateError;   //PID output               
+  lastError = error;    //remember current error
+  previousTime = currentTime;   //remember current time
+  return out;   //have function return the PID output
+}
 
 /*
 void PID()
@@ -66,3 +80,4 @@ I_control = ki * error * Time;
 PID = P_Control + D_Control + I_Control;
 }
 */
+// https://www.teachmemicro.com/arduino-pid-control-tutorial/
