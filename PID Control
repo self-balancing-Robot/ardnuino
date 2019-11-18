@@ -1,0 +1,60 @@
+#define IN1 8
+#define IN2 3
+#define IN4 10
+#define IN3 9
+#define EN1 5
+#define EN2 6
+
+float kp =
+float kd =
+float ki =
+
+float current_angle;
+float desired_angle = 512;,
+float error
+float error_previous
+
+
+void setup()
+{
+   Serial.begin(9600);
+  pinMode(A0, INPUT);
+ 
+  pinMode(EN1 , OUTPUT);
+  pinMode(EN2 , OUTPUT);
+  pinMode(IN1 , OUTPUT);
+  pinMode(IN2 , OUTPUT);
+  pinMode(IN4 , OUTPUT);
+  pinMode(IN3 , OUTPUT);
+
+}
+
+void loop()
+{
+  current_angle = analogRead(A0);
+  Serial.println(current_angle);
+}
+
+
+
+  analogWrite(EN1, 255);
+  analogWrite(EN2, 255);
+  digitalWrite(IN1 , HIGH);
+  digitalWrite(IN2 , LOW);
+  digitalWrite(IN4 , HIGH);
+  digitalWrite(IN3 , LOW);
+ 
+}
+
+{ PID Control
+
+P_Control = kp * error
+
+D_Control = kd * (error-error_previous)/Time
+
+I_control = ki * error * Time
+
+PID = P_Control + D_Control + I_Control
+
+}
+
