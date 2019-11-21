@@ -1,0 +1,507 @@
+#include <Wire.h>
+
+//Define//
+
+int rmotor1 = 8;
+
+int rmotor2 = 3;
+
+int lmotor1 = 10;
+
+int lmotor2 = 9;
+
+int mspeed = 10;
+
+int turnspeed=50;
+
+int16_t Acc_rawX, Acc_rawY, Acc_rawZ,Gyr_rawX, Gyr_rawY, Gyr_rawZ;
+
+float Acceleration_angle[2];
+
+float Gyro_angle[2];
+
+float Total_angle[2];
+
+float elapsedTime, time, timePrev;
+
+int i;
+
+float rad_to_deg = 180/3.141592654;
+
+float PID, pwmLeft, pwmRight, error, previous_error;
+
+float pid_p=0;
+
+float pid_i=0;
+
+float pid_d=0;
+
+//PID Stuff
+
+float kp=25;
+
+float ki=0;
+
+float kd=0.8;
+
+float desired_angle = 0;//Angle if we’re hopeful //
+
+void setup()
+
+{
+
+  Wire.begin(); //talkytalk //
+
+  Wire.beginTransmission(0x68);
+
+  Wire.write(0x6B);
+
+  Wire.write(0);
+
+  Wire.endTransmission(true);
+
+  // pin thingy //
+
+  pinMode(rmotor1,OUTPUT);
+
+  pinMode(lmotor1,OUTPUT);
+
+  pinMode(rmotor2,OUTPUT);
+
+  pinMode(lmotor2,OUTPUT);
+
+  Serial.begin(9600);
+
+  time = millis(); //what is time?//
+
+}
+
+void loop()
+
+{
+
+ 
+
+    timePrev = time;  
+
+    time = millis();  
+
+    elapsedTime = (time - timePrev) / 1000;
+
+    Wire.beginTransmission(0x68);
+
+    Wire.write(0x3B);
+
+    Wire.endTransmission(false);
+
+    Wire.requestFrom(0x68,6,true);
+
+    //accelerometer (idk how to spell)//
+
+    Acc_rawX=Wire.read()<<8|Wire.read();
+
+    Acc_rawY=Wire.read()<<8|Wire.read();
+
+    Acc_rawZ=Wire.read()<<8|Wire.read();
+
+    //I made the angles//
+
+    Acceleration_angle[0] = atan((Acc_rawY/16384.0)/sqrt(pow((Acc_rawX/16384.0),2) + pow((Acc_rawZ/16384.0),2)))*rad_to_deg;
+
+    Acceleration_angle[1] = atan(-1*(Acc_rawX/16384.0)/sqrt(pow((Acc_rawY/16384.0),2) + pow((Acc_rawZ/16384.0),2)))*rad_to_deg;
+
+    Wire.beginTransmission(0x68);
+
+    Wire.write(0x43);
+
+    Wire.endTransmission(false);
+
+    Wire.requestFrom(0x68,4,true);
+
+    //gyro go spinny data//
+
+    Gyr_rawX=Wire.read()<<8|Wire.read();
+
+    Gyr_rawY=Wire.read()<<8|Wire.read();
+
+    //I made more angles//
+
+    Gyro_angle[0] = Gyr_rawX/131.0;
+
+    Gyro_angle[1] = Gyr_rawY/131.0;
+
+    //combine both angles for complimentary filter, it called it pretty//
+
+    Total_angle[0] = 0.98 *(Total_angle[0] + Gyro_angle[0]*elapsedTime) + 0.02*Acceleration_angle[0];
+
+    Total_angle[1] = 0.98 *(Total_angle[1] + Gyro_angle[1]*elapsedTime) + 0.02*Acceleration_angle[1];
+
+    //all angles sum 0, figure out pitch//
+
+    error = Total_angle[0] - desired_angle;//for things going wrong//
+
+    // rational response, don’t scream//
+
+    pid_p = kp*error;
+
+    //not the differential error//
+
+    pid_i = pid_i+(ki*error);  
+
+    //differential error//
+
+    pid_d = kd*((error - previous_error)/elapsedTime);
+
+    //PID value//
+
+    PID = pid_p + pid_d;
+
+    //new error//
+
+    previous_error = error;
+
+    Serial.println(PID);
+
+    delay(60);                              
+
+    Serial.println(Total_angle[0]);          
+
+    fake to real values//
+
+    mspeed = abs(PID);
+
+    Serial.println(mspeed);                
+
+    // I’m not explaining this moron//
+
+    if(Total_angle[0]<0)
+
+      {
+
+       anti();
+
+      }
+
+    if(Total_angle[0]>0)
+
+      {
+
+       clockw();
+
+      }
+
+    if(Total_angle[0]>45)
+
+    halt();
+
+    if(Total_angle[0]<-45)
+
+    halt();
+
+   
+
+}
+
+//momentinium//
+
+void clockw()
+
+{
+
+  analogWrite(rmotor1,mspeed);
+
+  analogWrite(rmotor2,0);
+
+  analogWrite(lmotor1,mspeed);
+
+  analogWrite(lmotor2,0);
+
+}
+
+void anti()
+
+{
+
+ 
+
+  analogWrite(rmotor2,mspeed);
+
+  analogWrite(rmotor1,0);
+
+  analogWrite(lmotor2,mspeed);
+
+  analogWrite(lmotor1,0);
+
+}
+
+void halt()
+
+{
+
+ 
+
+  analogWrite(rmotor1,0);
+
+  analogWrite(rmotor2,0);
+
+  analogWrite(lmotor1,0);
+
+  analogWrite(lmotor2,0);
+
+ 
+
+}
+
+#include <Wire.h>
+
+//Define//
+
+int rmotor1 = 8;
+
+int rmotor2 = 3;
+
+int lmotor1 = 10;
+
+int lmotor2 = 9;
+
+int mspeed = 10;
+
+int turnspeed=50;
+
+int16_t Acc_rawX, Acc_rawY, Acc_rawZ,Gyr_rawX, Gyr_rawY, Gyr_rawZ;
+
+float Acceleration_angle[2];
+
+float Gyro_angle[2];
+
+float Total_angle[2];
+
+float elapsedTime, time, timePrev;
+
+int i;
+
+float rad_to_deg = 180/3.141592654;
+
+float PID, pwmLeft, pwmRight, error, previous_error;
+
+float pid_p=0;
+
+float pid_i=0;
+
+float pid_d=0;
+
+//PID Stuff
+
+float kp=25;
+
+float ki=0;
+
+float kd=0.8;
+
+float desired_angle = 0;//Angle if we’re hopeful //
+
+void setup()
+
+{
+
+  Wire.begin(); //talkytalk //
+
+  Wire.beginTransmission(0x68);
+
+  Wire.write(0x6B);
+
+  Wire.write(0);
+
+  Wire.endTransmission(true);
+
+  // pin thingy //
+
+  pinMode(rmotor1,OUTPUT);
+
+  pinMode(lmotor1,OUTPUT);
+
+  pinMode(rmotor2,OUTPUT);
+
+  pinMode(lmotor2,OUTPUT);
+
+  Serial.begin(9600);
+
+  time = millis(); //what is time?//
+
+}
+
+void loop()
+
+{
+
+ 
+
+    timePrev = time;  
+
+    time = millis();  
+
+    elapsedTime = (time - timePrev) / 1000;
+
+    Wire.beginTransmission(0x68);
+
+    Wire.write(0x3B);
+
+    Wire.endTransmission(false);
+
+    Wire.requestFrom(0x68,6,true);
+
+    //accelerometer (idk how to spell)//
+
+    Acc_rawX=Wire.read()<<8|Wire.read();
+
+    Acc_rawY=Wire.read()<<8|Wire.read();
+
+    Acc_rawZ=Wire.read()<<8|Wire.read();
+
+    //I made the angles//
+
+    Acceleration_angle[0] = atan((Acc_rawY/16384.0)/sqrt(pow((Acc_rawX/16384.0),2) + pow((Acc_rawZ/16384.0),2)))*rad_to_deg;
+
+    Acceleration_angle[1] = atan(-1*(Acc_rawX/16384.0)/sqrt(pow((Acc_rawY/16384.0),2) + pow((Acc_rawZ/16384.0),2)))*rad_to_deg;
+
+    Wire.beginTransmission(0x68);
+
+    Wire.write(0x43);
+
+    Wire.endTransmission(false);
+
+    Wire.requestFrom(0x68,4,true);
+
+    //gyro go spinny data//
+
+    Gyr_rawX=Wire.read()<<8|Wire.read();
+
+    Gyr_rawY=Wire.read()<<8|Wire.read();
+
+    //I made more angles//
+
+    Gyro_angle[0] = Gyr_rawX/131.0;
+
+    Gyro_angle[1] = Gyr_rawY/131.0;
+
+    //combine both angles for complimentary filter, it called it pretty//
+
+    Total_angle[0] = 0.98 *(Total_angle[0] + Gyro_angle[0]*elapsedTime) + 0.02*Acceleration_angle[0];
+
+    Total_angle[1] = 0.98 *(Total_angle[1] + Gyro_angle[1]*elapsedTime) + 0.02*Acceleration_angle[1];
+
+    //all angles sum 0, figure out pitch//
+
+    error = Total_angle[0] - desired_angle;//for things going wrong//
+
+    // rational response, don’t scream//
+
+    pid_p = kp*error;
+
+    //not the differential error//
+
+    pid_i = pid_i+(ki*error);  
+
+    //differential error//
+
+    pid_d = kd*((error - previous_error)/elapsedTime);
+
+    //PID value//
+
+    PID = pid_p + pid_d;
+
+    //new error//
+
+    previous_error = error;
+
+    Serial.println(PID);
+
+    delay(60);                              
+
+    Serial.println(Total_angle[0]);          
+
+    fake to real values//
+
+    mspeed = abs(PID);
+
+    Serial.println(mspeed);                
+
+    // I’m not explaining this moron//
+
+    if(Total_angle[0]<0)
+
+      {
+
+       anti();
+
+      }
+
+    if(Total_angle[0]>0)
+
+      {
+
+       clockw();
+
+      }
+
+    if(Total_angle[0]>45)
+
+    halt();
+
+    if(Total_angle[0]<-45)
+
+    halt();
+
+   
+
+}
+
+//momentinium//
+
+void clockw()
+
+{
+
+  analogWrite(rmotor1,mspeed);
+
+  analogWrite(rmotor2,0);
+
+  analogWrite(lmotor1,mspeed);
+
+  analogWrite(lmotor2,0);
+
+}
+
+void anti()
+
+{
+
+ 
+
+  analogWrite(rmotor2,mspeed);
+
+  analogWrite(rmotor1,0);
+
+  analogWrite(lmotor2,mspeed);
+
+  analogWrite(lmotor1,0);
+
+}
+
+void halt()
+
+{
+
+ 
+
+  analogWrite(rmotor1,0);
+
+  analogWrite(rmotor2,0);
+
+  analogWrite(lmotor1,0);
+
+  analogWrite(lmotor2,0);
+
+ 
+
+}
