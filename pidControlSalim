@@ -5,22 +5,12 @@
 #define EN1 5
 #define EN2 6
 
-float kp;
-float kd;
-float ki;
-
 float current_angle;
-float desired_angle = 512;
-float error, previousError;
-
-unsigned long currentTime, previousTime;
-float elapsedTime;
-
-float setPoint, input, output;
-
+int mspeed = 10 ;
+float angle;
 void setup()
 {
-  Serial.begin(9600);
+   Serial.begin(9600);
   pinMode(A0, INPUT);
  
   pinMode(EN1 , OUTPUT);
@@ -29,55 +19,77 @@ void setup()
   pinMode(IN2 , OUTPUT);
   pinMode(IN4 , OUTPUT);
   pinMode(IN3 , OUTPUT);
+  current_angle = analogRead(A0);
 
-  currentTime = millis();
-  elapsedTime = currentTime - previousTime;
- 
-  setPoint = 0;
 }
 
 void loop()
 {
-  input = analogRead(A0);     //read from rotary encoder connected to A0
-  output = PID(input);
-  sensor();
-  error = setPoint - input;
-}
+  angle=-511.5+current_angle;
+  mspeed=(angle/511.5)*10;
 
-void sensor()
-{
-  current_angle = analogRead(A0);
   Serial.println(current_angle);
 
   analogWrite(EN1, 255);
   analogWrite(EN2, 255);
+  for (float i=angle; -511.5<i<511.5;){
+    if (angle>0)
+    {
+      forward(1000);
+    }
+    else
+    {
+      backward(1000);
+    }
+  //test1(1000);
+  //test2(1000);
+  }
 }
-
-float computePID(double inp)
-{
-  currentTime = millis();   //get current time
-  elapsedTime = (double)(currentTime - previousTime);   //compute time elapsed from previous computation
-  error = Setpoint - inp;   // determine error
-  cumError += error * elapsedTime;    // compute integral
-  rateError = (error - lastError)/elapsedTime;    // compute derivative
-  double out = kp*error + ki*cumError + kd*rateError;   //PID output               
-  lastError = error;    //remember current error
-  previousTime = currentTime;   //remember current time
-  return out;   //have function return the PID output
-}
-
 /*
-void PID()
-{ 
-//PID Control
+void sensor()
+{
 
-P_Control = kp * error;
+}*/
+void forward(int wait)
+{
+  Serial.println();
+  Serial.println("Moving forward");
+  digitalWrite(IN1 , HIGH);
+  digitalWrite(IN2 , LOW);
+  digitalWrite(IN4 , HIGH);
+  digitalWrite(IN3 , LOW);
+  delay(wait);
+}
 
-D_Control = kd * (error-error_previous)/Time;
 
-I_control = ki * error * Time;
+void backward(int wait)
+{
+  Serial.println();
+  Serial.println("Moving backward");
+  digitalWrite(IN1 , LOW);
+  digitalWrite(IN2 , HIGH);
+  digitalWrite(IN4 , LOW);
+  digitalWrite(IN3 , HIGH);
+  delay(wait);
+}
+/*
+void test1(int wait)
+{
+  Serial.println("test1");
+  digitalWrite(IN1 , HIGH);
+  digitalWrite(IN2 , LOW);
+  digitalWrite(IN4 , LOW);
+  digitalWrite(IN3 , HIGH);
+  delay(wait);
+}
 
-PID = P_Control + D_Control + I_Control;
+void test2(int wait)
+{
+  Serial.println("test2");
+  digitalWrite(IN1 , LOW);
+  digitalWrite(IN2 , HIGH);
+  digitalWrite(IN4 , HIGH);
+  digitalWrite(IN3 , LOW);
+  delay(wait);
 }
 */
-// https://www.teachmemicro.com/arduino-pid-control-tutorial/
