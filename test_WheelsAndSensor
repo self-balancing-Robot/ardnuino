@@ -28,8 +28,6 @@ void loop()
   sensor();
   forward(1000);
   backward(1000);
-  //test1(1000);
-  //test2(1000);
 }
 
 void sensor()
@@ -62,24 +60,3 @@ void backward(int wait)
   digitalWrite(IN3 , HIGH);
   delay(wait);
 }
-/*
-void test1(int wait)
-{
-  Serial.println("test1");
-  digitalWrite(IN1 , HIGH);
-  digitalWrite(IN2 , LOW);
-  digitalWrite(IN4 , LOW);
-  digitalWrite(IN3 , HIGH);
-  delay(wait);
-}
-
-void test2(int wait)
-{
-  Serial.println("test2");
-  digitalWrite(IN1 , LOW);
-  digitalWrite(IN2 , HIGH);
-  digitalWrite(IN4 , HIGH);
-  digitalWrite(IN3 , LOW);
-  delay(wait);
-}
-*/
