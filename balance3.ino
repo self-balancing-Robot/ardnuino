@@ -125,7 +125,7 @@ void loop() {
     analogWrite(pinWheelLEnable, correction);
   }
   //if it's balanced, leave it
-  if (lowerDeadband <= analogAngle <= uppderDeadband){
+  if (lowerDeadband <= analogAngle && analogAngle <= upperDeadband){
     Serial.println("Stable");
     digitalWrite(pinWheelR1, LOW);
     digitalWrite(pinWheelR2, LOW);
