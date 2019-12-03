@@ -32,7 +32,7 @@ int previousError = 0;
 
 
 //Time between each measurement and correction
-int intervalTime = 1;
+int intervalTime = 35;
 
 void setup() {
   //pin setup
