@@ -4,8 +4,8 @@ float Kp = 1.0;
 float Kd = 1.0;
 float Ki = 1.0;
 
-//setPoint is 0 degrees, 511 is the analog bit equivalent
-int setPoint = 511;
+//setPoint is 0 degrees, 680 is the analog bit equivalent
+int setPoint = 680;
   
 #define pinWheelR1 8
 #define pinWheelR2 3
@@ -95,8 +95,13 @@ void loop() {
   //so we will get its absolute value.
   correction = abs(correction);
   
+  //deadband zones
+  int centreAngle = 680;
+  int lowerDeadband = 640;
+  int upperDeadband = 720;
+  
   //if it is tilting forward(neg correctionAngle), go forward
-  if (analogAngle < 511){
+  if (analogAngle < lowerDeadband){
     Serial.println("Moving forward");
     digitalWrite(pinWheelR1, LOW);
     digitalWrite(pinWheelR2, HIGH);
@@ -108,7 +113,7 @@ void loop() {
     analogWrite(pinWheelLEnable, correction);
   }
   //if it is tilting backward(pos correctionAngle), go back
-  if (analogAngle > 511){
+  if (analogAngle > upperDeadband){
     Serial.println("Moving backward");
     digitalWrite(pinWheelR1, HIGH);
     digitalWrite(pinWheelR2, LOW);
@@ -120,7 +125,7 @@ void loop() {
     analogWrite(pinWheelLEnable, correction);
   }
   //if it's balanced, leave it
-  if (analogAngle == 511){
+  if (lowerDeadband <= analogAngle <= uppderDeadband){
     Serial.println("Stable");
     digitalWrite(pinWheelR1, LOW);
     digitalWrite(pinWheelR2, LOW);
