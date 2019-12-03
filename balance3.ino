@@ -24,20 +24,15 @@ int setPoint = 511;
 //  L1: LOW L2: HIGH
 
 
-//To keep track of area by using trapzeium rule so for 
-//every loop iteration(50ms), get the iteration's 
-//trapezium area and add this to previousArea.
-//This is for the integral part of PID control
+//The area under the graph of error over time from 
+//t = 0 to t = currentTime - intervalTime
 int previousArea = 0;
+//The error recorded from the previous interval
 int previousError = 0;
-//To get the derivative by getting the gradient from
-//this variable to the current measured angle
-//This is for the derivative part of the PID control
-int lastAngle = 0;
 
 
 //Time between each measurement and correction
-int intervalTime = 50;
+int intervalTime = 1;
 
 void setup() {
   //pin setup
@@ -68,23 +63,29 @@ void loop() {
   //negative if angle < 511 (backward tilt) 
   int error = setPoint - analogAngle;
   
-  //applying Kp, Ki and Kd
+  //applying Kp, Ki and Kd 
+  
+  //NOTE: although Ki, Kd and Kp are float types and the calculations
+  //assign to integer variables, by C's design when a calculation is 
+  //done with both integers and floats, the integers are converted to
+  //float by default. Furthermore, also by default, when a float is 
+  //assigned to an integer variable it gets rounded to the nearest.
+  
   //current error * Kp
   int pCorrection = error * Kp;
   //current interval's trapezium area * Ki
   int iTrapeziumArea = 0.5 * (previousError + error) * intervalTime; 
   int iCorrection = iTrapeziumArea * Ki;
   //current interval's gradient * kd
-  int dDeriv = ((error - lastAngle)/intervalTime);
+  int dDeriv = ((error - previousError)/intervalTime);
   int dCorrection = dDeriv * Kd;
 
   //Adding individual P, I and D corrections to total correction
-  int correction= pCorrection + iCorrection + dCorrection;
+  int correction = pCorrection + iCorrection + dCorrection;
   
   //refresh variables
   previousArea = previousArea + iTrapeziumArea;
   previousError = error;
-  lastAngle = analogAngle;
    
 
   //correction is positive/negative to deduce the direction
