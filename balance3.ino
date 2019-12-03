@@ -96,13 +96,12 @@ void loop() {
   correction = abs(correction);
   
   //deadband zones
-  int centreAngle = 680;
   int lowerDeadband = 640;
   int upperDeadband = 720;
   
   //if it is tilting forward(neg correctionAngle), go forward
   if (analogAngle < lowerDeadband){
-    Serial.println("Move forwards: " + analogAngle);
+    Serial.println(analogAngle);
     digitalWrite(pinWheelR1, HIGH);
     digitalWrite(pinWheelR2, LOW);
     digitalWrite(pinWheelL1, LOW);
@@ -114,7 +113,7 @@ void loop() {
   }
   //if it is tilting backward(positive correction), go back
   if (analogAngle > upperDeadband){
-    Serial.println("Move backwards: " + analogAngle);
+    Serial.println(analogAngle);
     digitalWrite(pinWheelR1, LOW);
     digitalWrite(pinWheelR2, HIGH);
     digitalWrite(pinWheelL1, HIGH);
@@ -126,7 +125,7 @@ void loop() {
   }
   //if it's balanced, leave it
   if (lowerDeadband <= analogAngle && analogAngle <= upperDeadband){
-    Serial.println("Stable: " + analogAngle);
+    Serial.println(analogAngle);
     
     //setMotorSpeed(0)
     analogWrite(pinWheelREnable, 0);
