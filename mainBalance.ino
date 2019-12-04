@@ -1,6 +1,6 @@
 //PID controller constants
 float Kp = 100.0;
-float Kd = 15.0;
+float Kd = 0.0;
 float Ki = 0.0;
 
 //setPoint is 0 degrees, 680 is the analog bit equivalent
