@@ -3,7 +3,7 @@ float Kp = 100.0;
 float Kd = 0.0;
 float Ki = 0.0;
 
-//setPoint is 0 degrees, 680 is the analog bit equivalent
+//setPoint is 0 degrees, 560 is the analog bit equivalent
 int setPoint = 560;
   
 #define pinWheelR1 8
@@ -23,15 +23,12 @@ int setPoint = 560;
 //  L1: LOW L2: HIGH
 
 
-//The area under the graph of error over time from 
-//t = 0 to t = currentTime - intervalTime
-int previousArea = 0;
+
 //The error recorded from the previous interval
 int previousError = 0;
 
-
 //Time between each measurement and correction
-int intervalTime = 25;
+int intervalTime = 1;
 
 void setup() {
   //pin setup
@@ -83,7 +80,6 @@ void loop() {
   int correction = pCorrection + iCorrection + dCorrection;
   
   //refresh variables
-  previousArea = previousArea + iTrapeziumArea;
   previousError = error;
    
 
