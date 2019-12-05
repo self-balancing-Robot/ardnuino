@@ -1,6 +1,6 @@
 // Power enables left and right motors.
- const int D13 = HIGH;
- const int D12 = HIGH;
+#define pinWheelREnable 5
+#define pinWheelLEnable 6
 //Motor A LHS
 #define motorL1   10                              // Defines forward motion pin for left motor.
 #define motorL2   9                               // Defines back motion pin for left motor.
@@ -78,22 +78,26 @@ void loop() {
 void foward()
 {
     //digitalWrite(motorL1, HIGH);
-    analogWrite(motorL1, mspeed);
-    digitalWrite(motorL2, LOW);
+    analogWrite(motorL1, LOW);
+    digitalWrite(motorL2, HIGH);
     //digitalWrite(motorR1, HIGH);
-    analogWrite(motorR1, mspeed);
+    analogWrite(motorR1, HIGH);
     digitalWrite(motorR2, LOW);
-      
+    //setMotorSpeed(correctionAngle)
+    analogWrite(pinWheelREnable, mspeed);
+    analogWrite(pinWheelLEnable, mspeed);
 }
 void back()
 {
-    digitalWrite(motorL1, LOW);
+    digitalWrite(motorL1, HIGH);
     //digitalWrite(motorL2, HIGH);
-    analogWrite(motorL2, mspeed);
+    analogWrite(motorL2, LOW);
     digitalWrite(motorR1, LOW);
     //digitalWrite(motorR2, HIGH);
-    analogWrite(motorR2, mspeed);
- 
+    analogWrite(motorR2, HIGH);
+    //setMotorSpeed(correctionAngle)
+    analogWrite(pinWheelREnable, mspeed);
+    analogWrite(pinWheelLEnable, mspeed);
 }
 void halt()
 {
