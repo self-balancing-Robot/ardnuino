@@ -82,8 +82,8 @@ void foward()
     analogWrite(motorL1, mspeed);
     digitalWrite(motorL2, LOW);
     //digitalWrite(motorR1, HIGH);
-    analogWrite(motorR1, mspeed);
-    digitalWrite(motorR2, LOW);
+    analogWrite(motorR1, LOW);
+    digitalWrite(motorR2, mspeed);
       
 }
 void back()
@@ -91,9 +91,9 @@ void back()
     digitalWrite(motorL1, LOW);
     //digitalWrite(motorL2, HIGH);
     analogWrite(motorL2, mspeed);
-    digitalWrite(motorR1, LOW);
+    digitalWrite(motorR1, mspeed);
     //digitalWrite(motorR2, HIGH);
-    analogWrite(motorR2, mspeed);
+    analogWrite(motorR2, LOW);
  
 }
 void halt()
