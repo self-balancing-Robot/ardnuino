@@ -1,95 +1,105 @@
-#define IN1 8
-#define IN2 3
-#define IN4 10
-#define IN3 9
-#define EN1 5
-#define EN2 6
+// Power enables left and right motors.
+ const int D13 = HIGH;
+ const int D12 = HIGH;
+//Motor A LHS
+#define motorL1   10                              // Defines forward motion pin for left motor.
+#define motorL2   9                               // Defines back motion pin for left motor.
+//Motor B RHS
+#define motorR1   8                              // Defines forward motion pin for right motor.
+#define motorR2   3                               // Defines back motion pin for right motor.
+float mspeed;
 
-float current_angle;
-int mspeed = 10 ;
-float angle;
-void setup()
-{
-   Serial.begin(9600);
-  pinMode(A0, INPUT);
+float Gyr_rawY;                                    //Y is Pitch
+float elapsedTime, time, timePrev;
+float desired_angle = 0;                          //set the mid point of where the robot is stationary  
+float setpoint;
+
+float PID, error, previous_error;
+float pid_p;
+float pid_i;
+float pid_d;
+
+float kp=5;
+float ki=0;
+float kd=30;
+
+
+void setup() {
+  
+    Serial.begin(9600);
+  
+    pinMode(motorL1, OUTPUT);
+    pinMode(motorL2, OUTPUT);
+    pinMode(motorR1, OUTPUT);
+    pinMode(motorR2, OUTPUT);
+   
+
+    time = millis();
+}
+
+void loop() {
+  
+    timePrev = time;  
+    time = millis();  
+    elapsedTime = (time - timePrev) / 1000; 
  
-  pinMode(EN1 , OUTPUT);
-  pinMode(EN2 , OUTPUT);
-  pinMode(IN1 , OUTPUT);
-  pinMode(IN2 , OUTPUT);
-  pinMode(IN4 , OUTPUT);
-  pinMode(IN3 , OUTPUT);
-  current_angle = analogRead(A0);
-
+       
+    Gyr_rawY = analogRead(A0);
+    //Serial.println(analogRead(A0));
+    setpoint = (Gyr_rawY -= 500);
+  
+    error = setpoint - desired_angle;                       //ERROR CALCULATION
+    //Serial.println(setpoint);
+    pid_p = kp*error;                                       //PROPORTIONAL ERROR
+    pid_i = pid_i+(ki*error);                               //INTERGRAL ERROR 
+    pid_d = kd*((error - previous_error)/elapsedTime);      //DIFFERENTIAL ERROR
+    PID = (pid_p + pid_d)/100;                                //TOTAL PID VALUE
+    Serial.println(PID);
+    previous_error = error;                                 //UPDATING THE ERROR VALUE
+    mspeed = map(PID, -243.75, 243.75, 0, 255);           //Mapping PID values to a range of values to control motor speed
+    mspeed = constrain(mspeed, 0, 255);
+    //Serial.println(mspeed);
+    delay(50);
+      
+    if(setpoint<-10)
+      {
+       foward();
+      }
+    if(setpoint>10)
+      {
+       back();
+      }
+    if(setpoint<=10 && setpoint>=-10)
+    halt();
+      
 }
 
-void loop()
+//MOVEMENT FUNCTION
+void foward()
 {
-  angle=-511.5+current_angle;
-  mspeed=(angle/511.5)*10;
-
-  Serial.println(current_angle);
-
-  analogWrite(EN1, 255);
-  analogWrite(EN2, 255);
-  for (float i=angle; -511.5<i<511.5;){
-    if (angle>0)
-    {
-      forward(1000);
-    }
-    else
-    {
-      backward(1000);
-    }
-  //test1(1000);
-  //test2(1000);
-  }
+    //digitalWrite(motorL1, HIGH);
+    analogWrite(motorL1, mspeed);
+    digitalWrite(motorL2, LOW);
+    //digitalWrite(motorR1, HIGH);
+    analogWrite(motorR1, mspeed);
+    digitalWrite(motorR2, LOW);
+      
 }
-/*
-void sensor()
+void back()
 {
-
-}*/
-void forward(int wait)
-{
-  Serial.println();
-  Serial.println("Moving forward");
-  digitalWrite(IN1 , HIGH);
-  digitalWrite(IN2 , LOW);
-  digitalWrite(IN4 , HIGH);
-  digitalWrite(IN3 , LOW);
-  delay(wait);
+    digitalWrite(motorL1, LOW);
+    //digitalWrite(motorL2, HIGH);
+    analogWrite(motorL2, mspeed);
+    digitalWrite(motorR1, LOW);
+    //digitalWrite(motorR2, HIGH);
+    analogWrite(motorR2, mspeed);
+ 
 }
-
-
-void backward(int wait)
+void halt()
 {
-  Serial.println();
-  Serial.println("Moving backward");
-  digitalWrite(IN1 , LOW);
-  digitalWrite(IN2 , HIGH);
-  digitalWrite(IN4 , LOW);
-  digitalWrite(IN3 , HIGH);
-  delay(wait);
-}
-/*
-void test1(int wait)
-{
-  Serial.println("test1");
-  digitalWrite(IN1 , HIGH);
-  digitalWrite(IN2 , LOW);
-  digitalWrite(IN4 , LOW);
-  digitalWrite(IN3 , HIGH);
-  delay(wait);
-}
+    digitalWrite(motorL1, LOW);
+    digitalWrite(motorL2, LOW);
+    digitalWrite(motorR1, LOW);
+    digitalWrite(motorR2, LOW);
 
-void test2(int wait)
-{
-  Serial.println("test2");
-  digitalWrite(IN1 , LOW);
-  digitalWrite(IN2 , HIGH);
-  digitalWrite(IN4 , HIGH);
-  digitalWrite(IN3 , LOW);
-  delay(wait);
 }
-*/
