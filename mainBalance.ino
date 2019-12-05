@@ -54,10 +54,11 @@ void loop() {
   //512 to 1023 bits is a backward tilt
 
   
-  //getting error from feedback
-  //positive if angle > 511 (forward tilt)
-  //negative if angle < 511 (backward tilt) 
+  //getting error from feedback 
   int error = setPoint - analogAngle;
+  //positive error = backwards tilt
+  //negative error = forwards tilt
+  
   
   //applying Kp, Ki and Kd 
   
@@ -70,7 +71,7 @@ void loop() {
   //current error * Kp
   int pCorrection = error * Kp;
   //current interval's trapezium area * Ki
-  int iTrapeziumArea = 0.5 * (previousError + error) * intervalTime; 
+  int iTrapeziumArea = (intervalTime/1000) * (previousError + error) * intervalTime; 
   int iCorrection = iTrapeziumArea * Ki;
   //current interval's gradient * kd
   int dDeriv = ((error - previousError)/intervalTime);
@@ -85,17 +86,18 @@ void loop() {
 
   //correction is positive/negative to deduce the direction
   //of motor rotation.
-  //We don't need that as we use analogAngle to dictate the direction.
-  //Therefore correctionAngle is only needed for its magnitude
+  //We don't need that as we use error to dictate the direction.
+  //Therefore correction is only needed for its magnitude
   //so we will get its absolute value.
   correction = abs(correction);
+  wheelSpeed = correction/(512 * Kp) * 255;
   
   //deadband zones
-  int lowerDeadband = setPoint - 40;
-  int upperDeadband = setPoint + 40;
+  int lowerDeadband = -40;
+  int upperDeadband = 40;
   
-  //if it is tilting forward(neg correctionAngle), go forward
-  if (analogAngle < lowerDeadband){
+  //if it is tilting forward(negative correction), go forward
+  if (error < lowerDeadband){
     Serial.println(analogAngle);
     digitalWrite(pinWheelR1, LOW);
     digitalWrite(pinWheelR2, HIGH);
@@ -103,11 +105,12 @@ void loop() {
     digitalWrite(pinWheelL2, LOW);
 
     //setMotorSpeed(correctionAngle)
-    analogWrite(pinWheelREnable, correction);
-    analogWrite(pinWheelLEnable, correction);
+    int wheelSpeed = correction / (error * )
+    analogWrite(pinWheelREnable, wheelSpeed);
+    analogWrite(pinWheelLEnable, wheelSpeed);
   }
   //if it is tilting backward(positive correction), go back
-  if (analogAngle > upperDeadband){
+  if (error > upperDeadband){
     Serial.println(analogAngle);
     digitalWrite(pinWheelR1, HIGH);
     digitalWrite(pinWheelR2, LOW);
@@ -115,11 +118,11 @@ void loop() {
     digitalWrite(pinWheelL2, HIGH);
 
     //setMotorSpeed(correctionAngle)
-    analogWrite(pinWheelREnable, correction);
-    analogWrite(pinWheelLEnable, correction);
+    analogWrite(pinWheelREnable, wheelSpeed);
+    analogWrite(pinWheelLEnable, wheelSpeed);
   }
   //if it's balanced, leave it
-  if (lowerDeadband <= analogAngle && analogAngle <= upperDeadband){
+  if (error <= analogAngle && error <= upperDeadband){
     Serial.println(analogAngle);
     
     //setMotorSpeed(0)
