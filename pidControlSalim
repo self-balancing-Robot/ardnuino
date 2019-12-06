@@ -10,20 +10,21 @@
 float mspeed;
 
 float Gyr_rawY;                                    //Y is Pitch
-float elapsedTime, time, timePrev;
-float desired_angle = 0;                          //set the mid point of where the robot is stationary  
+float elapsedTime, currentTime, previousTime;
 float setpoint;
 
-float PID, error, previous_error;
+float PID, error, previousError, cumError;
 float pid_p;
 float pid_i;
 float pid_d;
 
-float kp=100;
-float ki=0;
-float kd=200;
+float kp=1;
+float ki=1;
+float kd=1;
 
 float a, b;
+
+int wait;
 
 void setup() {
   
@@ -34,52 +35,60 @@ void setup() {
     pinMode(motorR1, OUTPUT);
     pinMode(motorR2, OUTPUT);
    
+    setpoint = 500;
 
-    time = millis();
+    wait = 1000;
 }
 
 void loop() {
+    currentTime = millis();  
+    elapsedTime = (currentTime - previousTime);
   
-    timePrev = time;  
-    time = millis();  
-    elapsedTime = (time - timePrev); 
- 
-       
     Gyr_rawY = analogRead(A0);
-    //Serial.println(analogRead(A0));
-    setpoint = 500;
     a = Gyr_rawY - setpoint;
     b = abs(a)+setpoint;
-  
-    error = setpoint - desired_angle;                       //ERROR CALCULATION
+
+    error = setpoint - Gyr_rawY;                       //ERROR CALCULATION
+    cumError += error * elapsedTime;
     //Serial.println(setpoint);
     pid_p = kp*error;                                       //PROPORTIONAL ERROR
-    pid_i = pid_i+(ki*error);                               //INTERGRAL ERROR 
-    pid_d = kd*((error - previous_error)/elapsedTime);      //DIFFERENTIAL ERROR
-    PID = (pid_p + pid_d)/100;                                //TOTAL PID VALUE
-    Serial.print("PID value:     ");
-    Serial.println(PID);
-    previous_error = error;                                 //UPDATING THE ERROR VALUE
-    //mspeed = map(PID, -243.75, 243.75, 0, 255);           //Mapping PID values to a range of values to control motor speed
-    //mspeed = constrain(mspeed, 0, 255);
-    //Serial.println(mspeed);
- 
-      
-    if(Gyr_rawY<setpoint-5)
-      {
-       mspeed = map(b, abs(a), 1023, 0, 255);           //Mapping PID values to a range of values to control motor speed
-       mspeed = constrain(mspeed, 0, 255);
-       foward();
-      }
-    if(Gyr_rawY>setpoint+5)
-      {
-       mspeed = map(Gyr_rawY, a, 1023, 0, 255);           //Mapping PID values to a range of values to control motor speed
-       mspeed = constrain(mspeed, 0, 255);       
-       back();
-      }
-    if(Gyr_rawY<=setpoint+5 && Gyr_rawY>=setpoint-5)
-    halt();
-    delay(50);
+    pid_i = ki*cumError;                               //INTERGRAL ERROR 
+    pid_d = kd*((error - previousError)/elapsedTime);      //DIFFERENTIAL ERROR
+    if (currentTime != 0)
+    {
+        /*
+        Serial.print("current time:     ");
+        Serial.println(currentTime);
+        Serial.print("previous time:     ");
+        Serial.println(previousTime);
+        Serial.print("elapsed time:     ");
+        Serial.println(elapsedTime);
+        */
+        PID = pid_p + pid_i + pid_d;                                //TOTAL PID VALUE
+        Serial.print("PID:     ");
+        Serial.println(PID);
+        previousError = error;                                 //UPDATING THE ERROR VALUE
+        previousTime = currentTime;
+  
+        if(Gyr_rawY<setpoint-5)
+          {
+               mspeed = map(b, abs(a), 1023, 0, 255);           //Mapping PID values to a range of values to control motor speed
+               mspeed = constrain(mspeed, 0, 255);
+               foward();
+          }
+        if(Gyr_rawY>setpoint+5)
+          {
+               mspeed = map(Gyr_rawY, a, 1023, 0, 255);           //Mapping PID values to a range of values to control motor speed
+               mspeed = constrain(mspeed, 0, 255);       
+               back();
+          }
+        if(Gyr_rawY<=setpoint+5 && Gyr_rawY>=setpoint-5)
+          {
+              halt();
+          }
+    }
+    Serial.println("");
+    delay(wait);
 }
 
 //MOVEMENT FUNCTION
@@ -99,8 +108,8 @@ void foward()
     analogWrite(pinWheelLEnable, mspeed);
     Serial.print("mspeed     ");
     Serial.println(mspeed);
-    Serial.print("b     ");
-    Serial.println(b);
+   // Serial.print("b     ");
+   // Serial.println(b);
 }
 void back()
 {
@@ -118,8 +127,8 @@ void back()
     analogWrite(pinWheelLEnable, mspeed);
     Serial.print("mspeed:     ");
     Serial.println(mspeed);
-    Serial.print("a     ");
-    Serial.println(a);
+   // Serial.print("a     ");
+   // Serial.println(a);
 }
 void halt()
 {
