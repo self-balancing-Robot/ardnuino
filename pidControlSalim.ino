@@ -1,12 +1,12 @@
 // Power enables left and right motors.
 #define pinWheelREnable 5
 #define pinWheelLEnable 6
-//Motor A LHS
-#define motorL1   10    //  IN4                        // Defines forward motion pin for left motor.
-#define motorL2   9     //  IN3                        // Defines back motion pin for left motor.
-//Motor B RHS
-#define motorR1   8    //     IN1                     // Defines forward motion pin for right motor.
-#define motorR2   3     //    IN2                      // Defines back motion pin for right motor.
+//Motor Left
+#define motorL1   10    //  IN4                       
+#define motorL2   9     //  IN3                       
+//Motor Right
+#define motorR1   8    //     IN1                    
+#define motorR2   3     //    IN2                     
 float mspeed;
 
 float gyrAngle;                                   
@@ -32,7 +32,7 @@ void setup() {
     pinMode(motorR1, OUTPUT);
     pinMode(motorR2, OUTPUT);
    
-    setpoint = 500;
+    setpoint = 500;    //REQUIRED ANGLE VALUE
 
     minPID = -523;
     maxPID = 500;
@@ -43,14 +43,14 @@ void loop() {
     currentTime = millis();  
     elapsedTime = (currentTime - previousTime);
   
-    gyrAngle = analogRead(A0);
-    gyrAngle = constrain(gyrAngle, 0, 1023);
+    gyrAngle = analogRead(A0);     //IMU READING
+    gyrAngle = constrain(gyrAngle, 0, 1023);      //SENSOR RANGE
 
-    error = setpoint - gyrAngle;                       //ERROR CALCULATION
+    error = setpoint - gyrAngle;        
     cumError += error * elapsedTime;
     //Serial.println(setpoint);
-    pid_p = kp*error;                                       //PROPORTIONAL ERROR
-    pid_i = ki*cumError;                               //INTERGRAL ERROR 
+    pid_p = kp*error;             //PROPORTIONAL ERROR
+    pid_i = ki*cumError;          //INTERGRAL ERROR 
     pid_d = kd*((error - previousError)/elapsedTime);      //DIFFERENTIAL ERROR
     if (currentTime != 0)
     {
@@ -62,19 +62,18 @@ void loop() {
         Serial.print("elapsed time:     ");
         Serial.println(elapsedTime);
         */
-        PID = pid_p + pid_i + pid_d;                                //TOTAL PID VALUE
+        PID = pid_p + pid_i + pid_d;       //TOTAL PID VALUE
         Serial.print("PID:     ");
         Serial.println(PID);
-        previousError = error;                                 //UPDATING THE ERROR VALUE
-        previousTime = currentTime;
+        previousError = error;            //UPDATING THE ERROR VALUE
+        previousTime = currentTime;       //UPDATING PREVIOUS TIME
 
 
-              
         if(gyrAngle<setpoint-5)
           {//neg
             mspeed = map(PID, 0, maxPID, 0, 255);           //Mapping PID values to a range of values to control motor speed
             mspeed = constrain(mspeed, 0, 255);
-            foward();
+            forward();
 
           }
         if(gyrAngle>setpoint+5)
@@ -87,7 +86,7 @@ void loop() {
           }
         if(gyrAngle<=setpoint+5 && gyrAngle>=setpoint-5)
           {
-              halt();
+              rest();
           }
     }
     Serial.println("");
@@ -95,9 +94,9 @@ void loop() {
 }
 
 //MOVEMENT FUNCTION
-void foward()
+void forward()
 {
-    Serial.println("avance ta race");
+    Serial.println("moves forward");
     Serial.print("Angle:     ");
     Serial.println(gyrAngle);
     //digitalWrite(motorL1, HIGH);
@@ -116,7 +115,7 @@ void foward()
 }
 void back()
 {
-    Serial.println("recule ta mere");
+    Serial.println("moves backward");
     Serial.print("Angle:     ");
     Serial.println(gyrAngle);
     analogWrite(motorL1, LOW);
@@ -132,9 +131,9 @@ void back()
     Serial.println(mspeed);
 
 }
-void halt()
+void rest()
 {
-    Serial.println("stop");
+    Serial.println("stops");
     Serial.print("Angle:     ");
     Serial.println(gyrAngle);
     digitalWrite(motorL1, LOW);
