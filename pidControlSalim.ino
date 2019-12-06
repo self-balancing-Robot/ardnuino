@@ -9,21 +9,18 @@
 #define motorR2   3     //    IN2                      // Defines back motion pin for right motor.
 float mspeed;
 
-float Gyr_rawY;                                    //Y is Pitch
+float gyrAngle;                                   
 float elapsedTime, currentTime, previousTime;
 float setpoint;
 
 float PID, error, previousError, cumError;
-float pid_p;
-float pid_i;
-float pid_d;
+float pid_p, pid_i, pid_d;
+float minPID, maxPID;
+
 
 float kp=1;
-float ki=1;
+float ki=0;
 float kd=1;
-
-float a, b;
-
 int wait;
 
 void setup() {
@@ -37,18 +34,19 @@ void setup() {
    
     setpoint = 500;
 
-    wait = 1000;
+    minPID = -523;
+    maxPID = 500;
+    wait = 50;
 }
 
 void loop() {
     currentTime = millis();  
     elapsedTime = (currentTime - previousTime);
   
-    Gyr_rawY = analogRead(A0);
-    a = Gyr_rawY - setpoint;
-    b = abs(a)+setpoint;
+    gyrAngle = analogRead(A0);
+    gyrAngle = constrain(gyrAngle, 0, 1023);
 
-    error = setpoint - Gyr_rawY;                       //ERROR CALCULATION
+    error = setpoint - gyrAngle;                       //ERROR CALCULATION
     cumError += error * elapsedTime;
     //Serial.println(setpoint);
     pid_p = kp*error;                                       //PROPORTIONAL ERROR
@@ -69,20 +67,25 @@ void loop() {
         Serial.println(PID);
         previousError = error;                                 //UPDATING THE ERROR VALUE
         previousTime = currentTime;
-  
-        if(Gyr_rawY<setpoint-5)
-          {
-               mspeed = map(b, abs(a), 1023, 0, 255);           //Mapping PID values to a range of values to control motor speed
-               mspeed = constrain(mspeed, 0, 255);
-               foward();
+
+
+              
+        if(gyrAngle<setpoint-5)
+          {//neg
+            mspeed = map(PID, 0, maxPID, 0, 255);           //Mapping PID values to a range of values to control motor speed
+            mspeed = constrain(mspeed, 0, 255);
+            foward();
+
           }
-        if(Gyr_rawY>setpoint+5)
-          {
-               mspeed = map(Gyr_rawY, a, 1023, 0, 255);           //Mapping PID values to a range of values to control motor speed
-               mspeed = constrain(mspeed, 0, 255);       
+        if(gyrAngle>setpoint+5)
+          {//pos
+           mspeed = map(abs(PID), 0, abs(minPID), 0, 255);           //Mapping PID values to a range of values to control motor speed
+           mspeed = constrain(mspeed, 0, 255);
+               //mspeed = map(PID, 0, maxPID, 0, 255);           //Mapping PID values to a range of values to control motor speed
+              // mspeed = constrain(mspeed, 0, 255);       
                back();
           }
-        if(Gyr_rawY<=setpoint+5 && Gyr_rawY>=setpoint-5)
+        if(gyrAngle<=setpoint+5 && gyrAngle>=setpoint-5)
           {
               halt();
           }
@@ -96,7 +99,7 @@ void foward()
 {
     Serial.println("avance ta race");
     Serial.print("Angle:     ");
-    Serial.println(Gyr_rawY);
+    Serial.println(gyrAngle);
     //digitalWrite(motorL1, HIGH);
     digitalWrite(motorL1, HIGH);
     analogWrite(motorL2, LOW);
@@ -115,7 +118,7 @@ void back()
 {
     Serial.println("recule ta mere");
     Serial.print("Angle:     ");
-    Serial.println(Gyr_rawY);
+    Serial.println(gyrAngle);
     analogWrite(motorL1, LOW);
     //digitalWrite(motorL2, HIGH);
     digitalWrite(motorL2, HIGH);
@@ -127,13 +130,13 @@ void back()
     analogWrite(pinWheelLEnable, mspeed);
     Serial.print("mspeed:     ");
     Serial.println(mspeed);
-   // Serial.print("a     ");
-   // Serial.println(a);
+
 }
 void halt()
 {
     Serial.println("stop");
     Serial.print("Angle:     ");
+    Serial.println(gyrAngle);
     digitalWrite(motorL1, LOW);
     digitalWrite(motorL2, LOW);
     digitalWrite(motorR1, LOW);
